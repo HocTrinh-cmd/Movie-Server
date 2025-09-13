@@ -10,18 +10,18 @@ Hỗ trợ chạy bằng Docker.
 - Docker Compose
 
 ### Cài đặt
- 1. Clone dự án
+ 1. Clone dự án:
 git clone https://github.com/HocTrinh-cmd/Movie-Server.git
 cd Movie-Server
 
-2. Chạy với Docker Compose
+2. Chạy với Docker Compose:
 docker-compose up --build
 
-3. Apply migrations (lần đầu hoặc khi có update DB)
+3. Apply migrations (lần đầu hoặc khi có update DB):
 docker exec -it movie-server npx drizzle-kit push
 
-4. nếu muốn có database chạy lệnh
+4. nếu muốn có database chạy lệnh:
 npx ts-node seedData.ts
 
-download file API-postman_collection
+download file API-postman_collection:
 https://drive.google.com/file/d/1MxwFlxpAiXcSOqpFLXrnSktI7yr78mBW/view?usp=sharing
