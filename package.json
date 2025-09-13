@@ -1,0 +1,45 @@
+{
+  "name": "movie-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node --files src/app.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --watch src --ext ts --exec tsx src/app.ts",
+    "migration:generate": "drizzle-kit generate --config=drizzle.config.ts",
+    "migration:push": "node -r esbuild-register src/db/migrate.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "axios": "^1.10.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.44.5",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nodemailer": "^7.0.3",
+    "pg": "^8.16.3",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/nodemailer": "^6.4.17",
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.4",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.8.3"
+  },
+  "description": ""
+}

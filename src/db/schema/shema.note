@@ -1,0 +1,91 @@
+
+
+export const movies = pgTable("movies", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  overview: text("overview"),
+  posterUrl: text("poster_url"),
+  backdropUrl: text("backdrop_url"),
+  releaseDate: text("release_date"),
+  runtime: integer("runtime"), // phút
+  isAdult: boolean("is_adult").default(false),
+  originalTitle: text("original_title"),
+  originalLanguage: text("original_language"),
+  voteAverage: real("vote_average").default(0),
+  voteCount: integer("vote_count").default(0),
+  popularity: real("popularity").default(0),
+  status: varchar("status", { length: 30 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const keywords = pgTable("keywords", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+export const genres = pgTable("genres", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+//
+// MOVIE_GENRES (many-to-many)
+//
+export const movieGenres = pgTable("movie_genres", {
+  movieId: uuid("movie_id").notNull().references(() => movies.id),
+  genreId: uuid("genre_id").notNull().references(() => genres.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.movieId, table.genreId] }),
+}));
+export const casts = pgTable("casts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  profileUrl: text("profile_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+//
+// MOVIE_CAST (many-to-many)
+//
+export const movieCasts = pgTable("movie_casts", {
+  movieId: uuid("movie_id").notNull().references(() => movies.id),
+  castId: uuid("cast_id").notNull().references(() => casts.id),
+  characterName: text("character_name"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.movieId, table.castId] }),
+}));
+export const movieKeywords = pgTable("movie_keywords", {
+  movieId: uuid("movie_id").notNull().references(() => movies.id),
+  keywordId: uuid("keyword_id").notNull().references(() => keywords.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.movieId, table.keywordId] }),
+}));
+export const trailers = pgTable("trailers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  movieId: uuid("movie_id").notNull().references(() => movies.id),
+  title: text("title"),
+  youtubeUrl: text("youtube_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+export const subtitles = pgTable("subtitles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  movieId: uuid("movie_id").notNull().references(() => movies.id),
+  lang: varchar("lang", { length: 5 }), // ví dụ: "vi", "en"
+  label: text("label"), // Tiếng Việt, English
+  fileUrl: text("file_url"), // Đường dẫn tới .vtt
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
