@@ -13,7 +13,7 @@ Hỗ trợ chạy bằng Docker.
  1. Clone dự án:
 git clone https://github.com/HocTrinh-cmd/Movie-Server.git
 
-cd Movie-Server
+   cd Movie-Server
 
 3. Chạy với Docker Compose:
 docker-compose up --build
