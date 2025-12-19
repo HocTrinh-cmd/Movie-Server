@@ -14,12 +14,23 @@ const api = axios.create({
 });
 
 async function seed() {
+
   // 1) Genres
   const { data: genresRes } = await api.get("/genre/movie/list");
-  const genreMap: Record<number, string> = {};
+  const genreMap: Record<number, string> = {}; // Lưu ý: id thường là number
+
   for (const g of genresRes.genres) {
-    const [inserted] = await db.insert(genres).values({ name: g.name }).returning();
-    genreMap[g.id] = inserted.id;
+    // Bước 1: Tìm xem genre này có trong DB chưa
+    let [existing] = await db.select().from(genres).where(eq(genres.name, g.name));
+
+    if (existing) {
+      // Nếu có rồi -> Lấy ID của nó lưu vào map
+      genreMap[g.id] = existing.id;
+    } else {
+      // Nếu chưa có -> Insert mới và lấy ID
+      const [inserted] = await db.insert(genres).values({ name: g.name }).returning();
+      genreMap[g.id] = inserted.id;
+    }
   }
 
   // helper để insert phim
@@ -56,8 +67,22 @@ async function seed() {
 
         // genres
         for (const gid of m.genre_ids) {
-          const mapped = genreMap[gid];
-          if (mapped) await db.insert(movieGenres).values({ movieId, genreId: mapped });
+          const mappedGenreId = genreMap[gid]; // Kết quả là string (ID trong DB)
+
+          if (mappedGenreId) {
+            // Kiểm tra kỹ file schema.ts xem key là 'movieId' hay 'movie_id'
+            // Dưới đây mình viết cả 2 trường hợp, bạn dùng cái nào thì xóa cái kia đi
+
+            await db.insert(movieGenres).values({
+              // Trường hợp 1: Nếu trong schema bạn khai báo là movieId: ...
+              movieId: movieId,
+              genreId: mappedGenreId
+
+              // Trường hợp 2: Nếu schema khai báo là movie_id: ...
+              // movie_id: movieId,
+              // genre_id: mappedGenreId
+            }).onConflictDoNothing();
+          }
         }
 
         // keywords

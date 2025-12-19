@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
+    "outDir": "./dist",  
+    "rootDir": "./src",
     
     /* Projects */
     // "incremental": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
@@ -112,7 +114,7 @@
 
     
   },
-  "include": ["src", "src/types", "seedData.ts"]
+  "include": ["src", "src/types"]
   
   
 }

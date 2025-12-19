@@ -12,8 +12,10 @@ RUN npm install
 # Copy toàn bộ code vào container
 COPY . .
 
+RUN npm run build
+
 # Expose cổng 3000 (nếu app bạn lắng nghe ở port 3000)
-EXPOSE 6122
+EXPOSE 3000
 
 # Chạy server bằng ts-node
 CMD ["npm", "start"]
