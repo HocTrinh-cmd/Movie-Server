@@ -20,7 +20,7 @@ export const register = async (email: string, password: string) => {
     }
 
     const emailCheck = await axios.get(
-      `https://emailvalidation.abstractapi.com/v1/?api_key=0f92f99e65bd4789a046704c20321038&email=${email}`
+      `https://emailreputation.abstractapi.com/v1/?api_key=14bfb6cac6ee4de79d9e2264c2768239&email=${email}`
     );
     const data = emailCheck.data;
 
