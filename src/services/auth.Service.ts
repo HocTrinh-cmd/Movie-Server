@@ -8,6 +8,7 @@ import { sendVerificationEmail } from '../utils/sendEmail';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.utils';
 import { refreshTokens } from "../db/schema";
 import { JwtPayload } from "jsonwebtoken";
+import validator from "validator"
 
 
 
@@ -19,21 +20,11 @@ export const register = async (email: string, password: string) => {
       throw new Error('Thiếu email hoặc mật khẩu');
     }
 
-    const emailCheck = await axios.get(
-      `https://emailreputation.abstractapi.com/v1/?api_key=14bfb6cac6ee4de79d9e2264c2768239&email=${email}`
-    );
-    const data = emailCheck.data;
-
-    if (
-      !data.email_deliverability ||
-      data.email_deliverability.status !== 'deliverable' ||
-      data.email_deliverability.is_format_valid !== true
-    ) {
-      throw new Error('Email không hợp lệ (API Check Failed)');
+    if (!validator.isEmail(email)) {
+      throw new Error('Định dạng email không hợp lệ');
     }
 
     const existingUser = await db.query.users.findFirst({ where: eq(users.email, email) });
-
     if (existingUser) {
       throw new Error('Email đã tồn tại');
     }
@@ -41,7 +32,7 @@ export const register = async (email: string, password: string) => {
     const hashpass = await bcrypt.hash(password, 10);
     const verify_token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '15m' });
 
-    const result = await db.insert(users).values({
+    const [newUser] = await db.insert(users).values({
       email,
       passwordHash: hashpass,
       verifyToken: verify_token,
@@ -49,8 +40,13 @@ export const register = async (email: string, password: string) => {
     }).returning();
 
     await sendVerificationEmail(email, verify_token);
-    return result[0];
+
+    return newUser;
+
   } catch (error: any) {
+    if (error.message.includes("check mail")) {
+      await db.delete(users).where(eq(users.email, email));
+    }
     throw new Error(error.message || 'Đăng ký không thành công');
   }
 };
