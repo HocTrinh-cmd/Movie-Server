@@ -32,7 +32,7 @@ export const sendVerificationEmail = async (
 
   try {
     const data = await resend.emails.send({
-      from: 'httmailer1@gmail.com', 
+      from: 'onboarding@resend.dev',
       to: email,                     
       subject: title,
       html: htmlContent,
