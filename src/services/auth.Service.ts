@@ -25,12 +25,11 @@ export const register = async (email: string, password: string) => {
     const data = emailCheck.data;
 
     if (
-      data.deliverability !== 'DELIVERABLE' ||
-      !data.is_valid_format.value ||
-      data.is_disposable_email.value ||
-      !data.is_smtp_valid.value
+      !data.email_deliverability ||
+      data.email_deliverability.status !== 'deliverable' ||
+      data.email_deliverability.is_format_valid !== true
     ) {
-      throw new Error('Email không hợp lệ');
+      throw new Error('Email không hợp lệ (API Check Failed)');
     }
 
     const existingUser = await db.query.users.findFirst({ where: eq(users.email, email) });
@@ -150,7 +149,7 @@ export const updateProfile = async (data: Partial<typeof users.$inferInsert>, us
     const user = await db.update(users).set(data).where(eq(users.id, userId)).returning();
     return user[0];
   } catch (error: any) {
-    throw new Error('Cập nhật thông tin người dùng không thành công: ' + error.message); 
+    throw new Error('Cập nhật thông tin người dùng không thành công: ' + error.message);
   }
 }
 
