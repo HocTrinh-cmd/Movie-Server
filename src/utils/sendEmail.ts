@@ -9,22 +9,23 @@ export const sendVerificationEmail = async (
   type: "verify" | "reset" = "verify"
 ) => {
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false,
     auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_PASS,
+      user: process.env.BREVO_USER,
+      pass: process.env.BREVO_PASS,
     },
   });
 
-  const url = link || `${process.env.CLIENT_URL?.replace(/\/$/, '')}/${
-      type === "verify" ? "verify-email" : "reset-password"
+  const url = link || `${process.env.CLIENT_URL?.replace(/\/$/, '')}/${type === "verify" ? "verify-email" : "reset-password"
     }?token=${token}`;
 
   const title = type === "verify" ? "Xác minh tài khoản" : "Đặt lại mật khẩu";
-  const message = type === "verify" 
+  const message = type === "verify"
     ? "Cảm ơn bạn đã đăng ký HTMovie! Vui lòng xác minh email để bắt đầu trải nghiệm xem phim không giới hạn."
     : "Chúng tôi nhận được yêu cầu khôi phục mật khẩu. Nếu không phải bạn, hãy bỏ qua email này.";
-  
+
   const buttonText = type === "verify" ? "XÁC MINH NGAY" : "ĐẶT LẠI MẬT KHẨU";
 
   const htmlContent = `
@@ -97,9 +98,9 @@ export const sendVerificationEmail = async (
 
   try {
     const info = await transporter.sendMail({
-      from: '"HTMovie Support" <httmailer1@gmail.com>', 
+      from: '"HTMovie Support" <no-reply@htmovie.com>',
       to: email,
-      subject: `${type === "verify" ? "✅" : "🔐"} ${title}`,
+      subject: type === "verify" ? "✅ Xác minh tài khoản" : "🔐 Đặt lại mật khẩu",
       html: htmlContent,
     });
     console.log("✅ Email sent successfully:", info.messageId);
