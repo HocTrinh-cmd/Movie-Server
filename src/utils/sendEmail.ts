@@ -98,7 +98,7 @@ export const sendVerificationEmail = async (
 
   try {
     const info = await transporter.sendMail({
-      from: '"HTMovie Support" <no-reply@htmovie.com>',
+      from: '"HTMovie Support" <httmailer1@gmail.com>',
       to: email,
       subject: type === "verify" ? "✅ Xác minh tài khoản" : "🔐 Đặt lại mật khẩu",
       html: htmlContent,
