@@ -16,7 +16,7 @@ export const sendVerificationEmail = async (
       type === "verify" ? "verify-email" : "reset-password"
     }?token=${token}`;
 
-  const title = type === "verify" ? "🎬 Xác minh tài khoản" : "🔐 Đặt lại mật khẩu";
+  const title = type === "verify" ? "🎬 Xác minh tài khoản HTMovie" : "🔐 Đặt lại mật khẩu HTMovie";
 
   const htmlContent = `
       <div style="font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4;">
@@ -32,8 +32,8 @@ export const sendVerificationEmail = async (
 
   try {
     const data = await resend.emails.send({
-      from: 'onboarding@resend.dev', 
-      to: 'httmailer1@gmail.com',                     
+      from: 'httmailer1@gmail.com', 
+      to: email,                     
       subject: title,
       html: htmlContent,
     });
