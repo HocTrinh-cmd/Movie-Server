@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+dotenv.config();
 
 export const sendVerificationEmail = async (
   email: string,
@@ -6,18 +8,23 @@ export const sendVerificationEmail = async (
   link?: string,
   type: "verify" | "reset" = "verify"
 ) => {
+  // 1. Cấu hình chuẩn cho Gmail SMTP (Ổn định hơn service: 'gmail')
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,              // Port 587 là chuẩn nhất cho TLS
+    secure: false,          // false đối với port 587
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      pass: process.env.EMAIL_PASS, // Bắt buộc phải là MẬT KHẨU ỨNG DỤNG (16 ký tự)
     },
+    tls: {
+      rejectUnauthorized: false // Giúp tránh lỗi chứng chỉ SSL trên server Render
+    }
   });
 
   const url =
     link ||
-    `${process.env.CLIENT_URL?.replace(/\/$/, '')}/${
-      type === "verify" ? "verify-email" : "reset-password"
+    `${process.env.CLIENT_URL?.replace(/\/$/, '')}/${type === "verify" ? "verify-email" : "reset-password"
     }?token=${token}`;
 
   const title =
@@ -38,7 +45,8 @@ export const sendVerificationEmail = async (
       ? "Nếu bạn không yêu cầu đăng ký, hãy bỏ qua email này."
       : "Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.";
 
-  await transporter.sendMail({
+  // 2. LOGIC GỬI EMAIL (QUAN TRỌNG NHẤT)
+  const mailOptions = {
     from: `"🎬 Movie App" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: title,
@@ -56,5 +64,16 @@ export const sendVerificationEmail = async (
         </div>
       </div>
     `,
+  };
+
+  // 🚀 KỸ THUẬT FIRE-AND-FORGET:
+  // Không dùng 'await' ở đây. Server sẽ không đợi email gửi xong mà chạy tiếp luôn.
+  // Email sẽ tự chạy ngầm bên dưới.
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error("❌ Lỗi gửi email ngầm:", error);
+    } else {
+      console.log("✅ Email đã gửi ngầm thành công:", info.response);
+    }
   });
 };
