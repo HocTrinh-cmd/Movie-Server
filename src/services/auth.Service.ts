@@ -184,7 +184,9 @@ export const forgotPassword = async (email: string) => {
       .set({ verifyToken: resetToken })
       .where(eq(users.email, email));
 
-    const resetlink = `${process.env.CLIENT_URL?.replace(/\/$/, '')}/reset-password?token=${resetToken}`;
+    const baseUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL;
+
+    const resetlink = `${baseUrl?.replace(/\/$/, '')}/reset-password?token=${resetToken}`;
 
     await sendVerificationEmail(email, resetToken, resetlink, "reset");
 
