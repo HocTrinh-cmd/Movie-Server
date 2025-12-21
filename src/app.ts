@@ -46,12 +46,28 @@ app.use('/trailers', trailerRoutes);
 
 
 
+// ... các đoạn import và middleware giữ nguyên ...
+
 app.get("/", (req, res) => {
   res.json({ message: "✅ API is working!" });
 });
 
-// Khởi động server
-app.listen(PORT, "0.0.0.0",async () => {
-  await connectDB(); // kết nối DB trước khi in log
-  console.log(`🚀 Server is running at http://0.0.0.0:${PORT}`);
-});
+// Sửa lại đoạn khởi động server
+const startServer = async () => {
+  try {
+    // Thử kết nối DB trước
+    await connectDB();
+    console.log("✅ Database connected successfully");
+
+    // Nếu DB ok thì mới bật server
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server is running at http://0.0.0.0:${PORT}`);
+    });
+  } catch (error) {
+    console.error("❌ Lỗi kết nối Database:", error);
+    // Quan trọng: Không để process chết để Render còn đọc được log
+    // process.exit(1); // Tạm thời comment dòng này nếu có
+  }
+};
+
+startServer();
