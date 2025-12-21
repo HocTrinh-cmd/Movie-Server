@@ -10,7 +10,7 @@ const router = Router();
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT);
 
 // Import Routes
 import authRoutes from './routes/auth.Routes';

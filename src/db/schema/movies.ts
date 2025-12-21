@@ -20,6 +20,7 @@ export const movies = pgTable("movies", {
   backdropUrl: text("backdrop_url"),
   releaseDate: text("release_date"),
   runtime: integer("runtime"), // phút
+  videoUrl: text('video_url'),
   isAdult: boolean("is_adult").default(false),
   originalTitle: text("original_title"),
   originalLanguage: text("original_language"),
