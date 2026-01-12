@@ -10,6 +10,7 @@ type AddMovieInput = {
   backdropUrl?: string;
   releaseDate?: string;
   runtime?: number;
+  videoUrl?: string;
   isAdult?: boolean;
   originalTitle?: string;
   originalLanguage?: string;
@@ -45,7 +46,7 @@ export const discoverMovies = async ({
   page: number;
   perPage: number;
 }) => {
-  
+
   if (genres.length === 0) {
     return getMovies({ page, perPage });
   }
@@ -80,6 +81,8 @@ export const discoverMovies = async ({
 
 export const getMovieDetailById = async (id: string) => {
   try {
+    increaseViewCount(id); 
+
     const movie = await db.query.movies.findFirst({
       where: (m, { eq }) => eq(m.id, id),
       with: {
@@ -109,6 +112,41 @@ export const searchMovies = async (query: string) => {
   }
 };
 
+export const getMostViewedMovies = async ({ page = 1, perPage = 10 }: { page?: number; perPage?: number }) => {
+  try {
+    const data = await db.query.movies.findMany({
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      orderBy: (m) => desc(m.popularity), // Sắp xếp giảm dần theo popularity
+      // Tùy chọn: load thêm relations nếu cần hiển thị genre ở trang xếp hạng
+      with: {
+        movieGenres: { with: { genre: true } },
+      },
+    });
+
+    return { page, perPage, results: data };
+  } catch (error: any) {
+    throw new Error('Lấy bảng xếp hạng phim thất bại: ' + error.message);
+  }
+};
+
+export const increaseViewCount = async (id: string) => {
+  try {
+    // Sử dụng sql template của Drizzle để cộng dồn trực tiếp trong database
+    // Điều này an toàn hơn là lấy giá trị cũ ra rồi cộng bằng JS
+    await db.update(movies)
+      .set({ 
+        popularity: sql`${movies.popularity} + 1` 
+      })
+      .where(eq(movies.id, id));
+  } catch (error: any) {
+    // Chỉ log lỗi, không nên throw để tránh chặn luồng xem phim của user
+    console.error('Không thể tăng lượt xem: ' + error.message);
+  }
+};
+
+
+
 export const addMovie = async (data: AddMovieInput) => {
   const [newMovie] = await db.insert(movies).values({
     title: data.title,
@@ -117,6 +155,7 @@ export const addMovie = async (data: AddMovieInput) => {
     backdropUrl: data.backdropUrl,
     releaseDate: data.releaseDate,
     runtime: data.runtime,
+    videoUrl: data.videoUrl,
     isAdult: data.isAdult,
     originalTitle: data.originalTitle,
     originalLanguage: data.originalLanguage,

@@ -41,6 +41,18 @@ export const searchMovies = async (req: Request, res: Response) => {
   new SuccessResponse('Movies searched successfully', { result }).send(res);
 };
 
+export const getMostViewedMovies = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const perPage = Number(req.query.perPage) || 10; // Mặc định lấy 10 phim top đầu
+
+    const result = await movieService.getMostViewedMovies({ page, perPage });
+    res.status(200).json(result);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 export const createMovie = async (req: Request, res: Response) => {
   const movie = await movieService.addMovie(req.body);
   new SuccessResponse('Movie created successfully', { movie }).send(res);

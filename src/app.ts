@@ -10,7 +10,7 @@ const router = Router();
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT);
 
 // Import Routes
 import authRoutes from './routes/auth.Routes';
@@ -45,25 +45,28 @@ app.use('/histories', historyRoutes);
 app.use('/trailers', trailerRoutes);
 
 
-app.get("/", (req, res) => {
-  res.json({ message: "✅ API is working!" });
+
+// ... các đoạn import và middleware giữ nguyên ...
+
+app.get('/', (req, res) => {
+  res.status(200).send('Server is alive!');
 });
 
-// Sửa lại đoạn khởi động server
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+
 const startServer = async () => {
   try {
-    // Thử kết nối DB trước
     await connectDB();
     console.log("✅ Database connected successfully");
 
-    // Nếu DB ok thì mới bật server
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server is running at http://0.0.0.0:${PORT}`);
     });
   } catch (error) {
     console.error("❌ Lỗi kết nối Database:", error);
-    // Quan trọng: Không để process chết để Render còn đọc được log
-    // process.exit(1); // Tạm thời comment dòng này nếu có
   }
 };
 
