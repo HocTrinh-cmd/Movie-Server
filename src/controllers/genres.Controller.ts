@@ -1,52 +1,39 @@
 import * as genresService from '../services/movieGenres.Service';
 import { Request, Response } from 'express';
+import { SuccessResponse } from '../core/ApiResponse';
+import { ApiError } from '../utils/ApiError';
 
 export const getAllGenres = async (req: Request, res: Response) => {
-    try {
-        const genres = await genresService.getAllGenres();
-        res.status(200).json({ message: 'lấy danh sách thành công', genres });
-    } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+    const genres = await genresService.getAllGenres();
+    new SuccessResponse('Genres retrieved successfully', { genres }).send(res);
 };
 
 export const getMoviesByGenreId = async (req: Request, res: Response) => {
-    try {
-        const genreId = req.params.id;
-        const movies = await genresService.getMoviesByGenreId(genreId);
-        res.status(200).json({ success: true, movies });
-    } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+    const genreId = req.params.id;
+    if (!genreId) throw new ApiError(400, 'genreId is required');
+    const movies = await genresService.getMoviesByGenreId(genreId);
+    new SuccessResponse('Movies retrieved successfully', { movies }).send(res);
 }
 
 export const addGenre = async (req: Request, res: Response) => {
-    try {
-        const { name, description } = req.body;
-        const newGenre = await genresService.addGenre({ name, description });
-        res.status(200).json({ success: true, message: 'Thêm thành công', genre: newGenre });
-    } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+    const { name, description } = req.body;
+    if (!name) throw new ApiError(400, 'name is required');
+    const newGenre = await genresService.addGenre({ name, description });
+    new SuccessResponse('Genre added successfully', { genre: newGenre }).send(res);
 }
 
 export const updateGenre = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const { name, description } = req.body;
-        const updatedGenre = await genresService.updateGenre(id, { name, description });
-        res.status(200).json({ success: true, message: 'Cập nhật thành công', genre: updatedGenre });
-    } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+    const { id } = req.params;
+    const { name, description } = req.body;
+    if (!id) throw new ApiError(400, 'id is required');
+    if (!name) throw new ApiError(400, 'name is required');
+    const updatedGenre = await genresService.updateGenre(id, { name, description });
+    new SuccessResponse('Genre updated successfully', { genre: updatedGenre }).send(res);
 }
 
 export const deleteGenre = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        await genresService.deleteGenre(id);
-        res.status(200).json({ success: true, message: 'Xóa thể loại thành công' });
-    } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+    const { id } = req.params;
+    if (!id) throw new ApiError(400, 'id is required');
+    await genresService.deleteGenre(id);
+    new SuccessResponse('Genre deleted successfully').send(res);
 }
