@@ -46,6 +46,8 @@ app.use('/trailers', trailerRoutes);
 
 
 
+// ... các đoạn import và middleware giữ nguyên ...
+
 app.get('/', (req, res) => {
   res.status(200).send('Server is alive!');
 });

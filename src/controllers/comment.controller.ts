@@ -1,54 +1,39 @@
 import * as commnetService from '../services/comment.Service';
 import { Request, Response } from 'express';
+import { SuccessResponse } from '../core/ApiResponse';
+import { ApiError } from '../utils/ApiError';
 
 export const getCommnetsByMovieId = async (req: Request, res: Response) => {
-    try {
-        const { movieId } = req.params;
-
-        const comments = await commnetService.getCommentByMovieId(movieId);
-
-        res.status(200).json({ success: true, comments });
-    } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+    const { movieId } = req.params;
+    if (!movieId) throw new ApiError(400, 'movieId is required');
+    const comments = await commnetService.getCommentByMovieId(movieId);
+    new SuccessResponse('Comments retrieved successfully', { comments }).send(res);
 }
 
 export const createComment = async (req: Request, res: Response) => {
-    try {
-        const userId = (req as any).user?.userId;
-        const { movieId, content, parentId } = req.body;
-
-        const newComment = await commnetService.createComment(userId, movieId, content, parentId);
-
-        res.status(200).json({ success: true, message: 'Tạo đánh giá thành công', comment: newComment });
-    } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+    const userId = req.user?.userId;
+    const { movieId, content, parentId } = req.body;
+    if (!userId) throw new ApiError(401, 'Unauthorized');
+    if (!movieId || !content) throw new ApiError(400, 'movieId and content are required');
+    const newComment = await commnetService.createComment(userId, movieId, content, parentId);
+    new SuccessResponse('Comment created successfully', { comment: newComment }).send(res);
 }
 
 export const updateComment = async (req: Request, res: Response) => {
-    try {
-        const userId = (req as any).user?.userId;
-        const { commentId } = req.params;
-        const { content } = req.body;
-
-        const updatedComment = await commnetService.updateComment(userId, commentId, content);
-
-        res.status(200).json({ success: true, message: 'Cập nhật đánh giá thành công', comment: updatedComment });
-    } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+    const userId = req.user?.userId;
+    const { commentId } = req.params;
+    const { content } = req.body;
+    if (!userId) throw new ApiError(401, 'Unauthorized');
+    if (!commentId || !content) throw new ApiError(400, 'commentId and content are required');
+    const updatedComment = await commnetService.updateComment(userId, commentId, content);
+    new SuccessResponse('Comment updated successfully', { comment: updatedComment }).send(res);
 }
 
 export const deleteComment = async (req: Request, res: Response) => {
-    try {
-        const userId = (req as any).user?.userId;
-        const { commentId } = req.params;
-
-        await commnetService.deleteComment(userId, commentId);
-
-        res.status(200).json({ success: true, message: 'Xoá đánh giá thành công' });
-    } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+    const userId = req.user?.userId;
+    const { commentId } = req.params;
+    if (!userId) throw new ApiError(401, 'Unauthorized');
+    if (!commentId) throw new ApiError(400, 'commentId is required');
+    await commnetService.deleteComment(userId, commentId);
+    new SuccessResponse('Comment deleted successfully').send(res);
 }

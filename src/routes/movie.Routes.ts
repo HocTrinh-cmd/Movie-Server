@@ -1,17 +1,14 @@
 import { Router } from 'express';
 import * as movieController from '../controllers/movie.Controller';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = Router();
 
 
-router.get('/', movieController.getMovies);
-router.get('/discover/movie', movieController.discoverMoviesController);
-router.get('/trending', movieController.getMostViewedMovies);
-router.get('/:id/detail', movieController.getMovieById);
-router.get('/search/query', movieController.searchMovies);
-
-// Route Admin
-router.post('/add', movieController.createMovie);
-router.put('/update/:id', movieController.updateMovie);
+router.get('/', asyncHandler(movieController.getMovies));
+router.get('/discover/movie', asyncHandler(movieController.discoverMoviesController));
+router.get('/trending', asyncHandler(movieController.getMostViewedMovies));
+router.get('/:id/detail', asyncHandler(movieController.getMovieById));
+router.get('/search/query', asyncHandler(movieController.searchMovies));
 
 export default router;

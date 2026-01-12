@@ -29,7 +29,7 @@ export const getMovies = async ({ page = 1, perPage = 20 }: { page?: number; per
       offset: (page - 1) * perPage,
       orderBy: (m) => desc(m.releaseDate),
     });
-    return { page, perPage, results: movies };
+    return { page, perPage, records: movies };
   } catch (error: any) {
     throw new Error('Lấy danh sách phim không thành công: ' + error.message);
   }
@@ -62,7 +62,7 @@ export const discoverMovies = async ({
       .limit(perPage)
       .offset((page - 1) * perPage);
 
-    return { page, perPage, results: data };
+    return { page, perPage, records: data };
   }
 
   const data = await db.query.movies.findMany({
@@ -75,7 +75,7 @@ export const discoverMovies = async ({
     },
   });
 
-  return { page, perPage, results: data };
+  return { page, perPage, records: data };
 };
 
 
@@ -124,7 +124,7 @@ export const getMostViewedMovies = async ({ page = 1, perPage = 10 }: { page?: n
       },
     });
 
-    return { page, perPage, results: data };
+    return { page, perPage, records: data };
   } catch (error: any) {
     throw new Error('Lấy bảng xếp hạng phim thất bại: ' + error.message);
   }

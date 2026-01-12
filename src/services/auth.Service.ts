@@ -140,12 +140,19 @@ export const changePassword = async (userId: string, oldPassword: string, newPas
   }
 };
 
-export const updateProfile = async (data: Partial<typeof users.$inferInsert>, userId: string) => {
+export const updateProfile = async (userId: string, data: Partial<typeof users.$inferInsert>) => {
   try {
-    const user = await db.update(users).set(data).where(eq(users.id, userId)).returning();
+    // Lưu ý: data không nên chứa field 'id', cần lọc ra nếu có
+    const { id, ...updateData } = data as any; 
+
+    const user = await db.update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+      
     return user[0];
   } catch (error: any) {
-    throw new Error('Cập nhật thông tin người dùng không thành công: ' + error.message);
+    throw new Error('Cập nhật thất bại: ' + error.message);
   }
 }
 
