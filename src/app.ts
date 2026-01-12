@@ -45,9 +45,6 @@ app.use('/histories', historyRoutes);
 app.use('/trailers', trailerRoutes);
 
 
-
-// ... các đoạn import và middleware giữ nguyên ...
-
 app.get("/", (req, res) => {
   res.json({ message: "✅ API is working!" });
 });
