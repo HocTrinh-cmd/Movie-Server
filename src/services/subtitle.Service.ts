@@ -40,18 +40,20 @@ export const uploadSubtitle = async (movieId: string, lang: string, label: strin
     return newSubtitle;
 };
 
-export const updateSubtitle = async (subtitleId: string, data: { lang?: string, label?: string }) => {
+export const updateSubtitle = async (subtitleId: string, data: { lang?: string, label?: string, fileUrl?: string }) => {
     if (!subtitleId) throw new ApiError(400, "Subtitle ID is required");
 
     const [updatedSubtitle] = await db.update(subtitles)
-        .set(data)
+        .set({
+            ...data,
+            updatedAt: new Date(),
+        })
         .where(eq(subtitles.id, subtitleId))
         .returning();
 
     if (!updatedSubtitle) {
-        throw new ApiError(404, "Subtitle not found to update");
+        throw new ApiError(404, "Subtitle not found");
     }
-
     return updatedSubtitle;
 };
 
