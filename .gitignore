@@ -1,7 +1,72 @@
-﻿.env
-postgres-data/
-postgres-data
+﻿# ----------------------
+# 1. Dependencies & Logs
+# ----------------------
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+logs/
+*.log
+
+# ----------------------
+# 2. Build Output (TypeScript)
+# ----------------------
+# Thư mục chứa code JS sau khi build (quan trọng)
 dist/
-npm-debug.log
+build/
+# Cache của TypeScript
+*.tsbuildinfo
+
+# ----------------------
+# 3. Environment Variables (BẢO MẬT TUYỆT ĐỐI)
+# ----------------------
+# Không bao giờ đẩy file chứa key/pass lên git
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Nếu bạn dùng thư viện dotenv-vault
+.env.vault
+
+# ----------------------
+# 4. IDE & Editor System Files
+# ----------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# 5. Project Specific (Uploads & Storage)
+# ----------------------
+# Thư mục chứa video/ảnh tạm khi upload (như mình đã setup)
 uploads_temp/
+uploads/
+tmp/
+
+# ----------------------
+# 6. Testing & Coverage
+# ----------------------
+coverage/
+.nyc_output/
+
+# ----------------------
+# 7. Docker (Nếu dùng)
+# ----------------------
+docker-compose.override.yml
+# Thư mục data của DB nếu mount ra ngoài
+postgres-data/
+pgdata/
+
+# ----------------------
+# 8. Others
+# ----------------------
+# Certificate keys (nếu có HTTPS cục bộ)
+*.pem
+*.key
+*.crt
