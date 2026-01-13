@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: 123w
       POSTGRES_DB: moviedb
     ports:
-      - "5431:5432"
+      - "5431:5432" # Máy ngoài dùng 5431, Container dùng 5432
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
 
@@ -19,6 +19,8 @@ services:
     restart: always
     ports:
       - "8081:8080"
+    depends_on:
+      - postgres-db
 
   app:
     build: .
@@ -26,8 +28,16 @@ services:
     restart: always
     depends_on:
       - postgres-db
+    # Load toàn bộ biến môi trường từ file .env vào
+    env_file:
+      - .env
     environment:
+      # Ghi đè DATABASE_URL để dùng tên service "postgres-db" thay vì "localhost"
       DATABASE_URL: postgres://postgres:123w@postgres-db:5432/moviedb
+      PORT: 3000
     ports:
-      - "6122:6122"
-    command: npm run start
+      # Cổng trái (máy bạn): 6122 <--> Cổng phải (trong docker): 3000
+      - "6122:3000" 
+    # Chạy migration trước rồi mới start server
+    command: >
+      sh -c "npm run db:push && npm run start"

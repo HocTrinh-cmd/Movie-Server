@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:20-alpine
 
 # Thư mục làm việc trong container
 WORKDIR /app
@@ -18,4 +18,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Chạy server bằng ts-node
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npm run db:push && npm run start"]
