@@ -4,11 +4,11 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node --max-old-space-size=460 dist/index.js",
-    "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
+    "start": "node --max-old-space-size=460 dist/app.js",
+    "dev": "nodemon --watch src --ext ts --exec tsx src/app.ts",
     "db:push": "drizzle-kit push",
     "migration:generate": "drizzle-kit generate --config=drizzle.config.ts"
-  },  
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
