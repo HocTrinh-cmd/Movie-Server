@@ -1,10 +1,10 @@
 export class ApiError extends Error {
-    statusCode: number;
+    public statusCode: number;
 
     constructor(statusCode: number, message: string) {
         super(message);
         this.statusCode = statusCode;
-        // Dòng này giúp stack trace hiện đúng tên class khi debug
-        Error.captureStackTrace(this, this.constructor);
+        // Fix lỗi prototype chain trong TypeScript khi kế thừa Error
+        Object.setPrototypeOf(this, ApiError.prototype);
     }
 }

@@ -41,6 +41,14 @@ export const changePassword = async (req: Request, res: Response)=> {
   new SuccessResponse('Password changed successfully', result).send(res);
 };
 
+export const updateProfile = async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  if (!userId) throw new ApiError(401, 'Unauthorized');
+  const { name, avatarUrl } = req.body;
+  const updatedUser = await authService.updateProfile(userId, { name, avatarUrl });
+  new SuccessResponse('Profile updated successfully', { user: updatedUser }).send(res);
+}
+
 export const verifyEmail = async (req: Request, res: Response) => {
   const { token } = req.query as { token: string };
   if (!token) throw new ApiError(400, 'Token is invalid');
