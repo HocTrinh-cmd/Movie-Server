@@ -1,29 +1,47 @@
 import { Request, Response } from "express";
 import * as favoriteService from "../services/favorite.Service"
-import { SuccessResponse } from '../core/ApiResponse';
+import { PaginationResponse, SuccessResponse } from '../core/ApiResponse';
 import { ApiError } from '../utils/ApiError';
 
-export const getFavoriteMovie = async (req: Request, res: Response) => {
+export const getFavorites = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
-    if (!userId) throw new ApiError(401, 'Unauthorized');
-    const favoriteMovies = await favoriteService.getFavoriteMovie(userId);
-    new SuccessResponse('Favorite movies retrieved successfully', { Movies: favoriteMovies }).send(res);
+    const page = Number(req.query.page) || 1;
+    const perPage = Number(req.query.perPage) || 20;
+
+    if (!userId) throw new ApiError(401, "Unauthorized");
+
+    const { records, totalRecords } = await favoriteService.getFavoriteMovies(userId, { page, perPage });
+
+    new PaginationResponse(
+        "Favorites retrieved successfully",
+        records,
+        page,
+        perPage,
+        totalRecords
+    ).send(res);
 };
 
-export const isFavorite = async (req: Request, res: Response) => {
+export const checkIsFavorite = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
-    const movieId = req.query.movieId as string;
-    if (!userId) throw new ApiError(401, 'Unauthorized');
-    if (!movieId) throw new ApiError(400, 'movieId is required');
+    const { movieId } = req.params;
+
+    if (!userId) throw new ApiError(401, "Unauthorized");
+
     const isFav = await favoriteService.isFavorite(userId, movieId);
-    new SuccessResponse('Favorite status checked', { isFavorite: isFav }).send(res);
+
+    new SuccessResponse("Check favorite status", { isFavorite: isFav }).send(res);
 };
 
-export const toggleFavoriteMovie = async (req: Request, res: Response) => {
+export const toggleFavorite = async (req: Request, res: Response) => {
+    // Lấy userId từ token (được middleware decode gán vào req.user)
     const userId = req.user?.userId;
-    const movieId = req.query.movieId as string;
-    if (!userId) throw new ApiError(401, 'Unauthorized');
-    if (!movieId) throw new ApiError(400, 'movieId is required');
+    const { movieId } = req.body;
+
+    if (!userId) throw new ApiError(401, "Unauthorized");
+    if (!movieId) throw new ApiError(400, "Movie ID is required");
+
     const result = await favoriteService.toggleFavoriteMovie(userId, movieId);
-    new SuccessResponse('Favorite toggled successfully', result).send(res);
+
+    // Trả về kết quả (status: added hoặc removed)
+    new SuccessResponse(result.message, result).send(res);
 };

@@ -11,10 +11,10 @@ export const getMoviesByActor = async (req: Request, res: Response) => {
     new SuccessResponse('Movies retrieved successfully', casts).send(res);
 }
 
-export const getActorByid = async (req: Request, res: Response) => {
+export const getCastById = async (req: Request, res: Response) => {
     const { castId } = req.params;
     if (!castId) throw new ApiError(400, 'castId is required');
-    const cast = await castService.getActorByid(castId);
+    const cast = await castService.getCastById(castId);
     new SuccessResponse('Actor retrieved successfully', cast).send(res);
 }
 

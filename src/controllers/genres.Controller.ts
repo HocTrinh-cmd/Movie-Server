@@ -5,14 +5,14 @@ import { ApiError } from '../utils/ApiError';
 
 export const getAllGenres = async (req: Request, res: Response) => {
     const genres = await genresService.getAllGenres();
-    new SuccessResponse('Genres retrieved successfully', { genres }).send(res);
+    new SuccessResponse('Genres retrieved successfully', genres).send(res);
 };
 
 export const getMoviesByGenreId = async (req: Request, res: Response) => {
     const genreId = req.params.id;
     if (!genreId) throw new ApiError(400, 'genreId is required');
     const movies = await genresService.getMoviesByGenreId(genreId);
-    new SuccessResponse('Movies retrieved successfully', { movies }).send(res);
+    new SuccessResponse('Movies retrieved successfully', movies).send(res);
 }
 
 export const addGenre = async (req: Request, res: Response) => {

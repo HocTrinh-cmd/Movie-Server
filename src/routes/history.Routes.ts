@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as historyController from "../controllers/history.Controller";
-import { requireAuth } from "../middleware/auth.Middleware";
+import { requireAuth } from "../middlewares/auth.Middleware";
 import { asyncHandler } from "../utils/asyncHandler";
 
 const router = Router();
