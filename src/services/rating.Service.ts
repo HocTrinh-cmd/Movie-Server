@@ -54,6 +54,7 @@ export const getRatingsByMovieId = async (movieId: string) => {
 
     return ratingsList.map(r => ({
         ...r,
+        combinedvoteCount: (r.movie.voteCount || 0) + (r.movie.tmdbvoteCount || 0),
         combinedAverage: calculateCombinedAverage(r.movie)
     }));
 };
