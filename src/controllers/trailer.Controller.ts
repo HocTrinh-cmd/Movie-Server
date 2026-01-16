@@ -7,14 +7,14 @@ export const uploadTrailer = async (req: Request, res: Response) => {
     const { movieId, title, youtubeUrl } = req.body;
     if (!movieId || !title || !youtubeUrl) throw new ApiError(400, 'movieId, title, and youtubeUrl are required');
     const trailer = await trailerService.uploadTrailer({ movieId, title, youtubeUrl });
-    new SuccessResponse('Trailer uploaded successfully', { trailer }).send(res);
+    new SuccessResponse('Trailer uploaded successfully', trailer).send(res);
 };
 
 export const getTrailersByMovieId = async (req: Request, res: Response) => {
     const { movieId } = req.params;
     if (!movieId) throw new ApiError(400, 'movieId is required');
     const trailers = await trailerService.getTrailerByMovieId(movieId);
-    new SuccessResponse('Trailers retrieved successfully', { trailers }).send(res);
+    new SuccessResponse('Trailers retrieved successfully', trailers).send(res);
 };
 
 export const updateTrailer = async (req: Request, res: Response) => {
@@ -22,7 +22,7 @@ export const updateTrailer = async (req: Request, res: Response) => {
     const { title, youtubeUrl } = req.body;
     if (!trailerId) throw new ApiError(400, 'trailerId is required');
     const updatedTrailer = await trailerService.updateTrailer(trailerId, { title, youtubeUrl });
-    new SuccessResponse('Trailer updated successfully', { updatedTrailer }).send(res);
+    new SuccessResponse('Trailer updated successfully', updatedTrailer).send(res);
 };
 
 export const deleteTrailer = async (req: Request, res: Response) => {

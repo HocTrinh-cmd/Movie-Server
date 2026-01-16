@@ -1,8 +1,10 @@
 import { db } from '../db/db';
-import { movieCasts, movieGenres, movies } from '../db/schema';
-import { eq, inArray, desc, sql, count, countDistinct } from 'drizzle-orm';
+import { movieCasts, movieGenres, movies, watchHistory } from '../db/schema';
+import { eq, inArray, desc, sql, count, countDistinct, and } from 'drizzle-orm';
 import { ApiError } from '../utils/ApiError';
 import { uploadLocalFileToFirebase, deleteFileFromFirebase } from './firebase.Service';
+import { addPoints } from "./auth.Service"; 
+import { POINT_REWARDS } from "../constants/rank";
 
 type AddMovieInput = {
   title: string;
@@ -22,6 +24,8 @@ type AddMovieInput = {
   genreIds?: string[];
   castIds?: string[];
 };
+
+const WATCH_POINT_COOLDOWN = 30 * 60 * 1000; // 30 phút
 
 export const getMovies = async ({ page = 1, perPage = 20 }: { page?: number; perPage?: number }) => {
   const offset = (page - 1) * perPage;
@@ -64,9 +68,6 @@ export const discoverMovies = async ({
     return getMovies({ page, perPage });
   }
 
-  // -------------------------
-  // TRƯỜNG HỢP 1: Match ALL (Phải có ĐỦ tất cả genres)
-  // -------------------------
   if (match === "all") {
     // 1. Query lấy dữ liệu (Records)
     const data = await db
@@ -96,10 +97,6 @@ export const discoverMovies = async ({
     return { records, totalRecords, page, perPage };
   }
 
-  // -------------------------
-  // TRƯỜNG HỢP 2: Match ANY (Có ít nhất 1 genre là được)
-  // -------------------------
-  // 1. Lấy dữ liệu
   const records = await db.query.movies.findMany({
     where: (m, { inArray }) => inArray(movieGenres.genreId, genres), // Cú pháp này Drizzle tự lo join
     limit: perPage,
@@ -131,14 +128,76 @@ export const getMostViewedMovies = async (limit = 10) => {
     },
   });
 
-  return data; // Trả về mảng phim luôn, không cần object { records, total... }
+  return data;
 };
 
-export const getMovieDetailById = async (id: string) => {
+const processWatchReward = async (userId: string, movieId: string) => {
+    // Tìm lịch sử xem (Dựa trên unique userId + movieId)
+    const history = await db.query.watchHistory.findFirst({
+        where: and(
+            eq(watchHistory.userId, userId),
+            eq(watchHistory.movieId, movieId)
+        )
+    });
+
+    const now = new Date();
+
+    if (history) {
+        // --- ĐÃ TỪNG XEM ---
+        // Check thời gian lần cuối update (updatedAt)
+        const lastInteraction = new Date(history.updatedAt).getTime();
+        const timeDiff = now.getTime() - lastInteraction;
+
+        // Nếu chưa qua 30 phút -> Chỉ update thời gian, KHÔNG cộng điểm
+        if (timeDiff < WATCH_POINT_COOLDOWN) {
+            console.log(`[Anti-Spam] User ${userId} too soon for movie ${movieId}. No points.`);
+            await db.update(watchHistory)
+                .set({ 
+                    watchedAt: now, 
+                    updatedAt: now 
+                })
+                .where(eq(watchHistory.id, history.id));
+            return;
+        }
+
+        // Nếu đã qua 30 phút -> Cộng điểm & Update thời gian
+        await addPoints(userId, POINT_REWARDS.WATCH_MOVIE);
+        
+        await db.update(watchHistory)
+            .set({ 
+                watchedAt: now, 
+                updatedAt: now 
+            })
+            .where(eq(watchHistory.id, history.id));
+
+    } else {
+        // --- XEM LẦN ĐẦU ---
+        // Tạo dòng mới
+        await db.insert(watchHistory).values({
+            userId,
+            movieId,
+            progress: 0, // Mới vào xem thì progress là 0
+            watchedAt: now,
+            updatedAt: now,
+            createdAt: now
+        });
+
+        // Cộng điểm thưởng lần đầu
+        await addPoints(userId, POINT_REWARDS.WATCH_MOVIE);
+    }
+};
+
+export const getMovieDetailById = async (id: string, userId?: string) => {
   if (!id) throw new ApiError(400, "Movie ID is required");
 
   // Tăng view (Fire and forget - không await để tránh chặn request chính)
   increaseViewCount(id).catch(err => console.error("Failed to count view:", err));
+
+  if (userId) {
+        processWatchReward(userId, id).catch(err => 
+            console.error("Failed to process watch history:", err)
+        );
+    }
 
   const movie = await db.query.movies.findFirst({
     where: (m, { eq }) => eq(m.id, id),
@@ -155,19 +214,6 @@ export const getMovieDetailById = async (id: string) => {
 
   if (!movie) throw new ApiError(404, 'Movie not found');
   return movie;
-};
-
-export const searchMovies = async (query: string) => {
-  if (!query || query.trim() === '') {
-    return [];
-  }
-
-  const movieList = await db.query.movies.findMany({
-    where: (m, { ilike }) => ilike(m.title, `%${query}%`),
-    limit: 20, // Giới hạn kết quả tìm kiếm
-  });
-
-  return movieList;
 };
 
 // Hàm này giữ try/catch vì nó là side-effect, không nên làm crash luồng chính

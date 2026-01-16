@@ -2,6 +2,8 @@ import { db } from '../db/db';
 import { comments } from '../db/schema';
 import { eq, desc, and, asc, isNull, count } from 'drizzle-orm';
 import { ApiError } from '../utils/ApiError';
+import { addPoints } from './auth.Service'; 
+import { POINT_REWARDS } from '../constants/rank';
 
 // Helper: Làm phẳng mảng replies (Flatten)
 // Lưu ý: Drizzle trả về object lồng nhau rất sâu, ta dùng đệ quy để gom lại thành 1 mảng phẳng
@@ -97,6 +99,10 @@ export const createComment = async (userId: string, movieId: string, content: st
     if (!content || content.trim() === '') {
         throw new ApiError(400, "Content cannot be empty");
     }
+
+    addPoints(userId, POINT_REWARDS.COMMENT).catch(err => 
+        console.error(`[Reward] Failed to add comment points for user ${userId}:`, err)
+    );
 
     const [newComment] = await db.insert(comments).values({
         userId,

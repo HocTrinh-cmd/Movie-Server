@@ -77,3 +77,11 @@ export const refreshToken = async (req: Request, res: Response) => {
   const result = await authService.refreshAccessToken(refreshToken);
   new SuccessResponse('Token refreshed successfully', result).send(res);
 };
+
+export const checkRefreshTokenStatus = async (req: Request, res: Response) => {
+    const { refreshToken } = req.body; 
+
+    const result = await authService.checkRefreshToken(refreshToken);
+
+    new SuccessResponse('Token is valid', result).send(res);
+};

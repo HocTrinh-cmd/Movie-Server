@@ -2,7 +2,8 @@ import {
   pgTable,
   timestamp,
   uuid,
-  integer
+  integer,
+  unique
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { movies } from "./movies";
@@ -19,4 +20,6 @@ export const watchHistory = pgTable("watch_history", {
   duration: integer("duration"), // tổng thời lượng phim
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  unq: unique().on(t.userId, t.movieId), 
+}));

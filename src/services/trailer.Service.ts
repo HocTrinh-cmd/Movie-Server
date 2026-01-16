@@ -9,7 +9,6 @@ export const getTrailerByMovieId = async (movieId: string) => {
     const trailerList = await db.query.trailers.findMany({
         where: eq(trailers.movieId, movieId),
     });
-    
     return trailerList;
 };
 
@@ -19,7 +18,7 @@ export const uploadTrailer = async (data: { movieId: string, title: string, yout
     if (!data.title || !data.youtubeUrl) throw new ApiError(400, "Title and YouTube URL are required");
 
     const [newTrailer] = await db.insert(trailers).values(data).returning();
-    
+
     return newTrailer;
 };
 
@@ -28,7 +27,7 @@ export const updateTrailer = async (trailerId: string, data: { title?: string, y
 
     // Drizzle tự động bỏ qua các field undefined khi update, 
     // nhưng ta vẫn nên đảm bảo data object không rỗng nếu cần thiết.
-    
+
     const [updatedTrailer] = await db.update(trailers)
         .set(data)
         .where(eq(trailers.id, trailerId))
@@ -51,6 +50,6 @@ export const deleteTrailer = async (trailerId: string) => {
     if (!deletedTrailer) {
         throw new ApiError(404, "Trailer not found to delete");
     }
-    
+
     return deletedTrailer;
 };

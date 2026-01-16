@@ -2,6 +2,8 @@ import { db } from "../db/db";
 import { eq, sql, and } from "drizzle-orm"; // Nhớ import 'and'
 import { ratings, movies } from "../db/schema";
 import { ApiError } from "../utils/ApiError";
+import { addPoints } from "./auth.Service"; 
+import { POINT_REWARDS } from "../constants/rank";
 
 type MovieRating = {
     voteAverage?: number | null;
@@ -62,12 +64,12 @@ export const addOrUpdateRating = async (userId: string, movieId: string, score: 
         throw new ApiError(400, "Score must be between 0 and 10");
     }
 
-    // 1. FIX LOGIC: Phải tìm rating dựa trên cả UserId VÀ MovieId
+    // Phải tìm rating dựa trên cả UserId VÀ MovieId
     const existingRating = await db.query.ratings.findFirst({
         where: and(eq(ratings.userId, userId), eq(ratings.movieId, movieId)),
     });
 
-    // 2. Insert hoặc Update
+    // Insert hoặc Update
     if (existingRating) {
         await db.update(ratings)
             .set({ score, updatedAt: new Date() })
@@ -78,9 +80,13 @@ export const addOrUpdateRating = async (userId: string, movieId: string, score: 
             movieId,
             score
         });
+
+        addPoints(userId, POINT_REWARDS.RATE_MOVIE).catch(err => 
+            console.error(`[Reward] Failed to add rating points for user ${userId}:`, err)
+        );
     }
 
-    // 3. Tính toán lại trung bình cộng (Aggregation)
+    // Tính toán lại trung bình cộng (Aggregation)
     const result = await db
         .select({
             avg: sql<string>`avg(${ratings.score})`, // Postgres thường trả về string cho avg

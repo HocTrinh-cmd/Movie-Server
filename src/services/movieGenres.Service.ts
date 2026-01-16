@@ -2,31 +2,55 @@ import { db } from '../db/db';
 import { genres, movieGenres } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { ApiError } from '../utils/ApiError';
+import { count } from 'drizzle-orm';
 
 export const getAllGenres = async () => {
     const allGenres = await db.query.genres.findMany();
     return allGenres;
 }
 
-export const getMoviesByGenreId = async (genreId: string) => {
+export const getMoviesByGenreId = async (genreId: string, { page, perPage }: { page: number; perPage: number }) => {
     if (!genreId) throw new ApiError(400, "Genre ID is required");
 
-    const genreWithMovies = await db.query.genres.findFirst({
+    // Kiểm tra Genre có tồn tại không (và lấy tên để hiển thị cho đẹp)
+    const genreExists = await db.query.genres.findFirst({
         where: eq(genres.id, genreId),
-        with: {
-            movieGenres: {
-                with: {
-                    movie: true,
-                },
-            },
-        },
+        columns: { name: true } // Chỉ cần lấy tên
     });
 
-    if (!genreWithMovies) {
+    if (!genreExists) {
         throw new ApiError(404, "Genre not found");
     }
 
-    return genreWithMovies;
+    const limit = perPage;
+    const offset = (page - 1) * limit;
+
+    // Lấy danh sách phim (Query bảng trung gian movieGenres)
+    const rows = await db.query.movieGenres.findMany({
+        where: eq(movieGenres.genreId, genreId),
+        limit: limit,
+        offset: offset,
+        with: {
+            movie: true, // Join để lấy chi tiết phim
+        },
+    });
+
+    // Map lại dữ liệu để bỏ bớt các field thừa của bảng trung gian, chỉ lấy object movie
+    const movies = rows.map((row) => row.movie);
+
+    // Đếm tổng số lượng phim thuộc thể loại này
+    const totalResult = await db
+        .select({ value: count() })
+        .from(movieGenres)
+        .where(eq(movieGenres.genreId, genreId));
+
+    const total = totalResult[0].value;
+
+    return {
+        movies,
+        total,
+        genreName: genreExists.name
+    };
 };
 
 export const addGenre = async (genreData: typeof genres.$inferInsert) => {

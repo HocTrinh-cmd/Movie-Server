@@ -2,6 +2,7 @@ import * as movieService from '../services/movie.Service';
 import { Request, Response } from 'express';
 import { PaginationResponse, SuccessResponse } from '../core/ApiResponse';
 import { ApiError } from '../utils/ApiError';
+import * as searchMovies from '../services/searchMovies.Service';
 
 export const getMovies = async (req: Request, res: Response) => {
   const { page, perPage } = req.query;
@@ -57,27 +58,38 @@ export const getMostViewedMovies = async (req: Request, res: Response) => {
 export const getMovieById = async (req: Request, res: Response) => {
   const { id } = req.params;
   if (!id) throw new ApiError(400, 'id is required');
-  const movie = await movieService.getMovieDetailById(id);
+  const userId = (req as any).user?.userId || (req as any).user?.id;
+  const movie = await movieService.getMovieDetailById(id, userId);
   new SuccessResponse('Movie retrieved successfully', movie).send(res);
 }
 
-export const searchMovies = async (req: Request, res: Response) => {
-  const { query } = req.query;
-  if (!query) throw new ApiError(400, 'query is required');
-  const result = await movieService.searchMovies(String(query));
-  new SuccessResponse('Movies searched successfully', { result }).send(res);
+export const getRelatedMovies = async (req: Request, res: Response) => {
+    // URL: /recommendations?q=iron&page=1
+    const query = req.query.q as string;
+    const page = Number(req.query.page) || 1;
+    const perPage = Number(req.query.perPage) || 20;
+
+    const { movies, total, anchorMovie } = await searchMovies.getRelatedMoviesBySearchQuery(query, { page, perPage });
+
+    new PaginationResponse(
+        `Found movies related to '${anchorMovie}'`,
+        movies,
+        page,
+        perPage,
+        total
+    ).send(res);
 };
 
 export const createMovie = async (req: Request, res: Response) => {
   const movie = await movieService.addMovie(req.body);
-  new SuccessResponse('Movie created successfully', { movie }).send(res);
+  new SuccessResponse('Movie created successfully', movie).send(res);
 };
 
 export const updateMovie = async (req: Request, res: Response) => {
   const { id } = req.params;
   if (!id) throw new ApiError(400, 'id is required');
   const updatedMovie = await movieService.updateMovie(id, req.body);
-  new SuccessResponse('Movie updated successfully', { movie: updatedMovie }).send(res);
+  new SuccessResponse('Movie updated successfully', updatedMovie).send(res);
 }
 
 export const uploadMovieVideo = async (req: Request, res: Response) => {

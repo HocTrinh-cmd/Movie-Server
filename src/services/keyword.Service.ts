@@ -1,6 +1,6 @@
 import { db } from '../db/db';
 import { movies, movieKeywords, keywords } from '../db/schema';
-import { eq, ilike } from 'drizzle-orm';
+import { count, eq, ilike, or } from 'drizzle-orm';
 import { ApiError } from '../utils/ApiError';
 
 /**
@@ -11,37 +11,50 @@ export const getKeywordsByMovieTitle = async (title: string) => {
     throw new ApiError(400, "Movie title is required");
   }
 
-  const result = await db
-    .select({ id: keywords.id, name: keywords.name })
-    .from(movieKeywords)
-    .innerJoin(movies, eq(movieKeywords.movieId, movies.id))
-    .innerJoin(keywords, eq(movieKeywords.keywordId, keywords.id))
-    .where(ilike(movies.title, `%${title}%`));
+  // Cách query này tự động "nhảy" qua 3 bảng: movies -> movieKeywords -> keywords
+  const movieWithKeywords = await db.query.movies.findFirst({
+    where: (movies, { ilike }) => ilike(movies.title, `%${title}%`),
+    with: {
+      movieKeywords: {
+        with: {
+          keyword: true // Lấy thông tin chi tiết từ bảng keywords
+        }
+      }
+    }
+  });
 
-  return result;
-};
-
-/**
- * Get movies by keyword
- */
-export const getMoviesByKeyword = async (keyword: string) => {
-  if (!keyword) {
-    throw new ApiError(400, "Keyword is required");
+  // 1. Trường hợp không tìm thấy phim
+  if (!movieWithKeywords) {
+    return {
+      foundMovie: false,
+      message: `Movie '${title}' not found`,
+      keywords: []
+    };
   }
 
-  const result = await db
-    .select({
-      id: movies.id,
-      title: movies.title,
-      releaseDate: movies.releaseDate,
-    })
-    .from(movies)
-    .leftJoin(movieKeywords, eq(movies.id, movieKeywords.movieId))
-    .leftJoin(keywords, eq(movieKeywords.keywordId, keywords.id))
-    .where(ilike(keywords.name, `%${keyword}%`));
+  // 2. Trường hợp tìm thấy phim nhưng phim chưa được gắn keyword nào
+  if (movieWithKeywords.movieKeywords.length === 0) {
+    return {
+      foundMovie: true,
+      movieName: movieWithKeywords.title,
+      message: "Movie found but has no keywords",
+      keywords: []
+    };
+  }
 
-  return result;
+  // 3. Có dữ liệu -> Map lại cho đẹp (Bỏ bớt mấy cái ID thừa)
+  const result = movieWithKeywords.movieKeywords.map((mk) => ({
+    id: mk.keyword.id,
+    name: mk.keyword.name
+  }));
+
+  return {
+    foundMovie: true,
+    movieName: movieWithKeywords.title,
+    keywords: result
+  };
 };
+
 
 /**
  * Save movie with keywords (Transaction)
@@ -51,12 +64,12 @@ export const saveMovieWithKeywords = async (
   keywordNames: string[]
 ) => {
   if (!movieData.title) throw new ApiError(400, "Movie title is required");
-  
+
   return await db.transaction(async (tx) => {
     // 1. Insert movie (nếu chưa có)
     let movieId: string;
 
-    const validReleaseDate = movieData.releaseDate || null; 
+    const validReleaseDate = movieData.releaseDate || null;
 
     if (movieData.id) {
       movieId = movieData.id;
@@ -105,10 +118,10 @@ export const saveMovieWithKeywords = async (
       }
     }
 
-    return { 
-      movieId, 
-      keywordNames, 
-      message: "Movie and keywords saved successfully" 
+    return {
+      movieId,
+      keywordNames,
+      message: "Movie and keywords saved successfully"
     };
   });
 };
